@@ -1,8 +1,9 @@
 FROM public.ecr.aws/nginx/nginx-unprivileged:1.25.3
 
 USER root
-COPY ./nginx.conf /etc/nginx/nginx.conf
-COPY ./includes /etc/nginx/includes
+COPY --link ./config/nginx.conf /etc/nginx/nginx.conf
+COPY --link ./config/includes /etc/nginx/includes
+
 RUN mkdir -p \
     /var/lib/nginx/pypi \
     /var/lib/nginx/npm \
