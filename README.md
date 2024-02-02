@@ -6,14 +6,14 @@ A pypi, apt and npm caching proxy using only nginx
 ## Build
 
 ```
-docker build -t nginx .
+docker build -t nginx --no-cache .
 ```
 
 
 ## Run
 
 ```
-docker run -p 8080:80 -ti nginx
+docker run -p 80:8080 -p 81:8081 -ti nginx
 ```
 
 
@@ -23,12 +23,12 @@ docker run -p 8080:80 -ti nginx
 
 To tell pip to connect to this instead of pypi.org, use:
 ```
-pip install --index-url=https://<yourservice>/pypi/simple mypy
+pip install --index-url=https://pypi.<yourservice>/simple mypy
 ```
 
 or:
 ```
-export PIP_INDEX_URL=https://<yourservice>/pypi/simple
+export PIP_INDEX_URL=https://pypi.<yourservice>/simple
 pip install mypy
 ```
 
@@ -36,17 +36,17 @@ pip install mypy
 
 - Set via CLI:
   ```
-  npm config set registry https://<yourservice>/npm/
+  npm config set registry https://npm.<yourservice>/
   ```
 
 - Set via Environment Variable:
   ```
-  NPM_CONFIG_REGISTRY=https://<yourservice>/cache/try/npm/
+  NPM_CONFIG_REGISTRY=https://npm.<yourservice>/
   ```
 
 - Set Project or User specific config
   ```
-  echo 'registry = "https://<yourservice>/npm/"' > ~/.npmrc
+  echo 'registry = "https://npm.<yourservice>/"' > ~/.npmrc
   ```
 
 
@@ -55,20 +55,20 @@ pip install mypy
 - Set through yarn config:
   ```
   # Yarn 1
-  yarn config set registry https://<yourservice>/npm/
+  yarn config set registry https://npm.<yourservice>/
 
   # Yarn 2
-  yarn config set npmRegistryServer https://<yourservice>/npm/
+  yarn config set npmRegistryServer https://npm.<yourservice>/
   ```
 
 - Set through environment variable:
   ```
-  YARN_REGISTRY=https://<yourservice>/npm/
+  YARN_REGISTRY=https://npm.<yourservice>/
   ```
 
 - Project or User specific config:
   ```
-  echo 'registry = "https://<yourservice>/npm/"' > ~/.yarnrc
+  echo 'registry = "https://npm.<yourservice>/"' > ~/.yarnrc
   ```
 
 ### Debian apt
@@ -82,7 +82,7 @@ Components: main
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 
 Types: deb
-URIs: https://<yourservice>/debian-security
+URIs: https://apt.<yourservice>/debian-security
 Suites: bookworm-security
 Components: main
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
@@ -92,12 +92,7 @@ Or
 
 ```
 # cat /etc/apt/sources.list
-deb https://<yourservice>/debian/ bookworm main contrib non-free contrib non-free-firmware
-deb-src https://<yourservice>/debian/ bookworm main contrib non-free contrib non-free-firmware
-
-deb https://<yourservice>/debian-security bookworm-security main contrib non-free
-deb-src https://<yourservice>/debian-security bookworm-security main contrib non-free
-
-deb https://<yourservice>/debian/ bookworm-updates main contrib non-free
-deb-src https://<yourservice>/debian/ bookworm-updates main contrib non-free
+deb https://apt.<yourservice>/debian/ bookworm main contrib non-free contrib non-free-firmware
+deb https://apt.<yourservice>/debian/ bookworm-updates main contrib non-free
+deb https://apt.<yourservice>/debian-security bookworm-security main contrib non-free
 ```
