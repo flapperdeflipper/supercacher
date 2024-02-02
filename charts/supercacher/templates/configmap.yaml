@@ -1,0 +1,13 @@
+{{/* Configmap for environment variables */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "supercacher.fullname" $ }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "supercacher.labels" $ | nindent 4 }}
+data:
+  {{/* Additional bot configuration */}}
+  {{- range $idx, $env := $.Values.extraEnv }}
+  {{ $env.name }}: {{ $env.value | quote }}
+  {{- end }}

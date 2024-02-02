@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "supercacher.fullname" $ }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "supercacher.labels" $ | nindent 4 }}
+spec:
+  replicas: {{ $.Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "supercacher.selectorLabels" $ | nindent 6 }}
+  serviceName: {{ include "supercacher.fullname" $ }}
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        {{- include "supercacher.labels" . | nindent 8 }}
+        {{- if $.Values.podLabels }}
+        {{- toYaml $.Values.podLabels | trim | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") $ | sha256sum }}
+        {{- if $.Values.datadog.enabled }}
+        ad.datadoghq.com/{{ $.Chart.Name }}.logs: '[{"service":"{{ $.Chart.Name }}","source":"nginx"}]'
+        {{- end }}
+        {{- with $.Values.podAnnotations }}
+        {{ toYaml . | trim | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with $.Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ . | quote }}
+      {{- end }}
+      {{- with $.Values.initContainers }}
+      initContainers:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      serviceAccountName: {{ include "supercacher.serviceAccountName" $ }}
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ default 10 $.Values.terminationGracePeriodSeconds }}
+      containers:
+      - name: {{ $.Chart.Name }}
+        securityContext:
+          {{- toYaml $.Values.securityContext | nindent 12 }}
+        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        command:
+        - /docker-entrypoint.sh
+        args:
+        - "nginx"
+        - "-g"
+        - "daemon off;"
+        ports:
+        - name: http-pypi
+          containerPort: 8080
+          protocol: TCP
+        - name: http-npm
+          containerPort: 8081
+          protocol: TCP
+        - name: http-apt
+          containerPort: 8082
+          protocol: TCP
+        {{- if default true $.Values.livenessProbe.enabled }}
+        livenessProbe:
+          initialDelaySeconds: {{ default 5 $.Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ default 30 $.Values.livenessProbe.periodSeconds }}
+          httpGet:
+            path: /healthz/liveness
+            port: http-pypi
+        {{- end }}
+        {{- if default true $.Values.readinessProbe.enabled }}
+        readinessProbe:
+          initialDelaySeconds: {{ default 5 $.Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ default 30 $.Values.readinessProbe.periodSeconds }}
+          httpGet:
+            path: /healthz/readiness
+            port: http-pypi
+        {{- end }}
+        {{- if default true $.Values.startupProbe.enabled }}
+        startupProbe:
+          tcpSocket:
+            port: http-pypi
+          initialDelaySeconds: {{ default 10 $.Values.startupProbe.initialDelaySeconds }}
+          periodSeconds: {{ default 5 $.Values.startupProbe.periodSeconds }}
+          successThreshold: {{ default 1 $.Values.startupProbe.successThreshold }}
+          failureThreshold: {{ default 5 $.Values.startupProbe.failureThreshold }}
+        {{- end }}
+        resources:
+          {{- toYaml $.Values.resources | nindent 10 }}
+        env:
+        - name: RADITYA_IS_BATMAN
+          value: "true"
+        {{- if $.Values.datadog.enabled }}
+        - name: DD_AGENT_ENV_TAG
+          value: "{{ $.Values.envName }}"
+        - name: DATADOG_TRACE_DEBUG
+          value: "true"
+        - name: DATADOG_STATSD_SOCKET
+          value: "{{ $.Values.datadog.mountPath }}/dsd.socket"
+        - name: DATADOG_APM_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: DD_ENV
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/env']
+        - name: DD_SERVICE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/service']
+        {{- if $.Values.datadog.unifiedServiceTagging }}
+        - name: DD_VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/version']
+        {{- end }}
+        {{- end }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "supercacher.fullname" $ }}
+        - secretRef:
+            name: {{ include "supercacher.fullname" $ }}
+        {{- with $.Values.existingSecrets }}
+        {{- range $idx, $secret := . }}
+        - secretRef:
+            name: {{ $secret.name | quote }}
+        {{- end }}
+        {{- end }}
+        volumeMounts:
+        - name: cache
+          mountPath: /var/lib/nginx
+        - name: run
+          mountPath: /var/run
+        - name: tmp
+          mountPath: /tmp
+        {{- if $.Values.datadog.enabled }}
+        - name: dsd_socket
+          mountPath: {{ $.Values.datadog.mountPath }}
+          readOnly: true
+        {{- end }}
+      volumes:
+      - name: run
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+      {{- if $.Values.datadog.enabled }}
+      - name: dsd_socket
+        hostPath:
+          path: {{ $.Values.datadog.mountPath }}
+      {{- end }}
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+  volumeClaimTemplates:
+  - name: cache
+  {{- if $.Values.persistence.enabled }}
+    persistentVolumeClaim:
+      claimName: {{ $.Values.persistence.existingClaim | default (include "supercacher.fullname" $) }}
+  {{- else }}
+    emptyDir: {}
+  {{- end -}}

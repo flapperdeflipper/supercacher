@@ -1,0 +1,63 @@
+{{- if and $.Values.ingress.enabled (gt (len $.Values.hostnames) 0) }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "supercacher.fullname" $ }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "supercacher.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/tls-acme: "true"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    {{- range $key, $value := $.Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  ingressClassName: {{ $.Values.ingress.class }}
+  tls:
+  {{- range $i, $hostname := $.Values.hostnames }}
+  - hosts:
+    - {{ $hostname }}
+    secretName: {{ include "supercacher.fullname" $ }}-{{ $i }}-letsencrypt
+  {{- end }}
+  rules:
+  {{- range $i, $hostname := $.Values.hostnames }}
+  {{/* Endpoint for apt */}}
+  - host: {{ printf "apt.%s" $hostname | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ include "supercacher.fullname" $ }}
+            port:
+              name: http-apt
+
+  {{/* Endpoint for npm */}}
+  - host: {{ printf "npm.%s" $hostname | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ include "supercacher.fullname" $ }}
+            port:
+              name: http-npm
+
+  {{/* Endpoint for pypi */}}
+  - host: {{ printf "pypi.%s" $hostname | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ include "supercacher.fullname" $ }}
+            port:
+              name: http-pypi
+  {{- end }}
+{{- end }}
