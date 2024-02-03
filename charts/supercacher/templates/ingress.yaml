@@ -5,7 +5,7 @@ metadata:
   name: {{ include "supercacher.fullname" $ }}
   namespace: {{ $.Release.Namespace }}
   labels:
-    {{- include "supercacher.labels" . | nindent 4 }}
+    {{- include "supercacher.labels" $ | nindent 4 }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     kubernetes.io/ingress.allow-http: "false"
@@ -24,8 +24,8 @@ spec:
   {{- end }}
   rules:
   {{- range $i, $hostname := $.Values.hostnames }}
-  {{/* Endpoint for apt */}}
-  - host: {{ printf "apt.%s" $hostname | quote }}
+  {{- range $portname, $portnumber := $.Values.service.ports }}
+  - host: {{ printf "%s.%s" $portname $hostname | quote }}
     http:
       paths:
       - path: /
@@ -34,30 +34,7 @@ spec:
           service:
             name: {{ include "supercacher.fullname" $ }}
             port:
-              name: http-apt
-
-  {{/* Endpoint for npm */}}
-  - host: {{ printf "npm.%s" $hostname | quote }}
-    http:
-      paths:
-      - path: /
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: {{ include "supercacher.fullname" $ }}
-            port:
-              name: http-npm
-
-  {{/* Endpoint for pypi */}}
-  - host: {{ printf "pypi.%s" $hostname | quote }}
-    http:
-      paths:
-      - path: /
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: {{ include "supercacher.fullname" $ }}
-            port:
-              name: http-pypi
+              name: "http-{{ $portname }}"
+  {{- end }}
   {{- end }}
 {{- end }}

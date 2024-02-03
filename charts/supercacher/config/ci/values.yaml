@@ -1,0 +1,67 @@
+hostnames:
+  - steq.it
+
+nameOverride: "supercacher"
+fullnameOverride: "supercacher"
+
+replicaCount: 3
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: In
+          values:
+          - supercacher
+      topologyKey: "kubernetes.io/hostname"
+
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: worker-group
+          operator: In
+          values:
+          - apps-arm
+
+podDisruptionBudget:
+  maxUnavailable: "33%"
+
+nodeSelector:
+  worker-group: default
+
+tolerations:
+  - key: "worker-group"
+    operator: "Equal"
+    value: "apps-arm"
+    effect: "NoSchedule"
+
+externalSecrets: true
+
+resources:
+  requests:
+    memory: 128M
+    cpu: 200m
+    ephemeral-storage: "1Gi"
+  limits:
+    memory: 512M
+    cpu: 400m
+    ephemeral-storage: "5Gi"
+
+ingress:
+  enabled: true
+  class: internal-ingress-nginx
+  cert_issuer: letsencrypt-issuer
+  annotations: {}
+
+datadog:
+  enabled: true
+  unifiedServiceTagging: true
+
+persistence:
+  enabled: true
+  storageClass: gp3
+  accessMode: ReadWriteOnce
+  size: 200Gi

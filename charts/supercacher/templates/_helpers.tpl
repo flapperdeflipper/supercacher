@@ -1,4 +1,4 @@
-{{/* vim: set filetype=mustache: */}}
+{{/* vim: set filetype=helm: */}}
 {{/*
     Expand the name of the chart.
 */}}
@@ -31,15 +31,15 @@
     Common labels
 */}}
 {{- define "supercacher.labels" -}}
-{{- include "supercacher.selectorLabels" . }}
+{{- include "supercacher.selectorLabels" $ }}
 app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
-helm.sh/chart: {{ include "supercacher.chart" . | quote }}
+helm.sh/chart: {{ include "supercacher.chart" $ | quote }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 {{- if $.Values.datadog.enabled }}
-tags.datadoghq.com/env: {{ $.Values.envName | quote }}
-tags.datadoghq.com/service: {{ include "supercacher.name" . }}
+tags.datadoghq.com/env: {{ default "ci" $.Values.envName | quote }}
+tags.datadoghq.com/service: {{ include "supercacher.name" $ }}
 {{- if $.Values.datadog.unifiedServiceTagging }}
 tags.datadoghq.com/version: {{ $.Values.version | quote }}
 {{- end }}
@@ -50,7 +50,7 @@ tags.datadoghq.com/version: {{ $.Values.version | quote }}
     Selector labels
 */}}
 {{- define "supercacher.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "supercacher.name" . | quote }}
+app.kubernetes.io/name: {{ include "supercacher.name" $ | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
 app.kubernetes.io/app: "supercacher"
 {{- end }}
@@ -65,18 +65,3 @@ app.kubernetes.io/app: "supercacher"
 {{- default "default" $.Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
-
-{{/*
-    Redis configuration
-*/}}
-{{- define "supercacher.redis.host" -}}
-{{- default (printf "%s-redis-master.%s.svc.cluster.local" .Release.Name .Release.Namespace) $.Values.externalRedis.host -}}
-{{- end -}}
-
-{{- define "supercacher.redis.port" -}}
-{{- default "6379" $.Values.externalRedis.port -}}
-{{- end -}}
-
-{{- define "supercacher.redis.database" -}}
-{{- default "1" $.Values.externalRedis.database -}}
-{{- end -}}

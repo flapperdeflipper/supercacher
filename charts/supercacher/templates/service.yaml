@@ -12,18 +12,12 @@ metadata:
 spec:
   type: {{ $.Values.service.type }}
   ports:
-  - name: http-pypi
-    port: 8080
-    targetPort: 8080
+  {{- range $portname, $portnumber := $.Values.service.ports }}
+  - name: {{ printf "http-%s" $portname }}
+    port: {{ $portnumber }}
+    targetPort: {{ $portnumber }}
     protocol: TCP
-  - name: http-npm
-    port: 8081
-    targetPort: 8081
-    protocol: TCP
-  - name: http-apt
-    port: 8082
-    targetPort: 8082
-    protocol: TCP
+  {{- end }}
   {{- with $.Values.service.clusterIP }}
   clusterIP: {{ . }}
   {{- end }}

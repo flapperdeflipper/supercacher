@@ -3,16 +3,20 @@ hostnames:
 
 service:
   type: ClusterIP
-  port: 8080
   clusterIP: "None"
   annotations: {}
+  ports:
+    pypi: 8080
+    npm: 8081
+    apt: 8082
+    proxy: 8083
 
 image:
   pullPolicy: Always
   tag: main
   repository: 129317782449.dkr.ecr.eu-west-1.amazonaws.com/supercacher
 
-replicaCount: 3
+replicaCount: 1
 
 affinity: {}
 imagePullSecrets: []
@@ -23,6 +27,8 @@ fullnameOverride: ""
 
 podAnnotations: {}
 podLabels: {}
+
+externalSecrets: false
 
 podDisruptionBudget: {}
 extraEnv: []
@@ -52,6 +58,7 @@ serviceAccount:
   name: ""
   rules: []
 
+## Probes
 livenessProbe:
   enabled: true
   initialDelaySeconds: 10
@@ -72,35 +79,37 @@ startupProbe:
   successThreshold: 1
   failureThreshold: 5
 
+## Set resource definitions
 resources:
   requests:
+    memory: 64M
+    cpu: 100m
+    ephemeral-storage: "100Mi"
+  limits:
     memory: 128M
     cpu: 200m
-    ephemeral-storage: "15Gi"
-  limits:
-    memory: 512M
-    cpu: 400m
-    ephemeral-storage: "20Gi"
+    ephemeral-storage: "500Mi"
 
+## Create ingress object
 ingress:
-  enabled: true
-  class: internal-ingress-nginx
+  enabled: false
+  class: nginx
   cert_issuer: ""
   annotations: {}
 
+## Additional existing secrets to mount as env vars
 existingSecrets: []
 # - name: someSecret
 
+# Enable datadog
 datadog:
   enabled: false
   mountPath: /var/run/datadog
   unifiedServiceTagging: false
 
-
 ## Persist data to a persistent volume
 persistence:
-  enabled: true
-  ## database data Persistent Volume Storage Class
+  enabled: false
   ## If defined, storageClassName: <storageClass>
   ## If set to "-", storageClassName: "", which disables dynamic provisioning
   ## If undefined (the default) or set to null, no storageClassName spec is
@@ -109,5 +118,5 @@ persistence:
   ##
   storageClass: "-"
   accessMode: ReadWriteOnce
-  size: 8Gi
+  size: 200Gi
   annotations: {}

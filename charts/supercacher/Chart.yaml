@@ -1,6 +1,6 @@
 apiVersion: v2
 name: supercacher
-description: A Helm chart for supercacher: An nginx proxy for npm, apt and pypi
+description: "A Helm chart for supercacher: An nginx proxy for npm, apt and pypi"
 type: application
 version: 0.0.1
 appVersion: "1.25.3"
