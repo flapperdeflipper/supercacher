@@ -8,7 +8,6 @@ metadata:
     {{- include "supercacher.labels" $ | nindent 4 }}
 data:
   SERGEI_WANTS_A_BURGER: "true"
-  {{/* Additional bot configuration */}}
   {{- range $idx, $env := $.Values.extraEnv }}
   {{ $env.name }}: {{ $env.value | quote }}
   {{- end }}

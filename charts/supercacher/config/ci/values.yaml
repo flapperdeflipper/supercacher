@@ -1,8 +1,8 @@
 hostnames:
   - steq.it
 
-nameOverride: "supercacher"
-fullnameOverride: "supercacher"
+nameOverride: supercacher
+fullnameOverride: supercacher
 
 replicaCount: 3
 

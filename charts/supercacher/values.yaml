@@ -28,8 +28,6 @@ fullnameOverride: ""
 podAnnotations: {}
 podLabels: {}
 
-externalSecrets: false
-
 podDisruptionBudget: {}
 extraEnv: []
 # - name:  some_env_var
@@ -96,6 +94,10 @@ ingress:
   class: nginx
   cert_issuer: ""
   annotations: {}
+
+## Secrets: Set externalSecrets to true to use SSM parameters
+secrets: {}
+externalSecrets: false
 
 ## Additional existing secrets to mount as env vars
 existingSecrets: []

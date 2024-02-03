@@ -52,7 +52,7 @@ tags.datadoghq.com/version: {{ $.Values.version | quote }}
 {{- define "supercacher.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "supercacher.name" $ | quote }}
 app.kubernetes.io/instance: {{ .Release.Name | quote }}
-app.kubernetes.io/app: "supercacher"
+app.kubernetes.io/app: supercacher
 {{- end }}
 
 {{/*

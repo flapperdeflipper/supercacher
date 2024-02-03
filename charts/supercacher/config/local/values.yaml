@@ -1,0 +1,62 @@
+hostnames:
+  - pl4.dev
+
+service:
+  type: NodePort
+  clusterIP: ""
+  annotations:
+    test-annotation: "test"
+  ports:
+    pypi: 8080
+    npm: 8081
+    apt: 8082
+    proxy: 8083
+
+image:
+  pullPolicy: IfNotPresent
+  tag: latest
+  repository: supercacher
+
+replicaCount: 3
+
+podAnnotations:
+  test-annotation: "test"
+
+podLabels:
+  test-annotation: "test"
+
+extraEnv:
+- name:  some_env_var
+  value: "some value"
+
+serviceAccount:
+  create: true
+  annotations:
+    test-annotation: "test"
+  name: ""
+  rules: []
+
+resources:
+  requests:
+    memory: 512M
+    cpu: 1000m
+    ephemeral-storage: "10Gi"
+  limits:
+    memory: 1024M
+    cpu: 2000m
+    ephemeral-storage: "20Gi"
+
+ingress:
+  enabled: false
+  class: nginx
+  cert_issuer: ""
+  annotations:
+    test-annotation: "test"
+
+secrets:
+  test-annotation: "test"
+
+externalSecrets: false
+
+persistence:
+  enabled: false
