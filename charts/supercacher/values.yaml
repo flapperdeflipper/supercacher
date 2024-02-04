@@ -86,7 +86,7 @@ healthProbes:
     periodSeconds: 1
     timeoutSeconds: 2
     tcpSocket:
-      port: http-pypi
+      port: http
     successThreshold: 1
     failureThreshold: 2
 
