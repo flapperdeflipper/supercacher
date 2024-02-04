@@ -141,7 +141,7 @@ On the command line, use:
 apk \
     --no-cache \
     --repository https://yourservice/alpine/v3.13/main \
-    --repository https://yourservice/v3.13/community
+    --repository https://yourservice/alpine/v3.13/community
     add package1 package2 ... package10
 ```
 
