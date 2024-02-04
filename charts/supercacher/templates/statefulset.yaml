@@ -56,22 +56,24 @@ spec:
         - "-g"
         - "daemon off;"
         ports:
-        - name: http-pypi
-          containerPort: 8080
+        - name: http
+          containerPort: 8888
           protocol: TCP
-        - name: http-npm
-          containerPort: 8081
+        {{- range $portname, $portnumber := $.Values.service.ports }}
+        - name: {{ printf "http-%s" $portname }}
+          containerPort: {{ $portnumber }}
           protocol: TCP
-        - name: http-apt
-          containerPort: 8082
-          protocol: TCP
+        {{- end }}
         {{- if default true $.Values.livenessProbe.enabled }}
         livenessProbe:
           initialDelaySeconds: {{ default 5 $.Values.livenessProbe.initialDelaySeconds }}
           periodSeconds: {{ default 30 $.Values.livenessProbe.periodSeconds }}
           httpGet:
             path: /healthz/liveness
-            port: http-pypi
+            port: http
+            httpHeaders:
+              - name: host
+                value: healthz
         {{- end }}
         {{- if default true $.Values.readinessProbe.enabled }}
         readinessProbe:
@@ -79,7 +81,10 @@ spec:
           periodSeconds: {{ default 30 $.Values.readinessProbe.periodSeconds }}
           httpGet:
             path: /healthz/readiness
-            port: http-pypi
+            port: http
+            httpHeaders:
+              - name: host
+                value: healthz
         {{- end }}
         {{- if default true $.Values.startupProbe.enabled }}
         startupProbe:

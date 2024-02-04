@@ -12,6 +12,10 @@ metadata:
 spec:
   type: {{ $.Values.service.type }}
   ports:
+  - name: http
+    port: 8888
+    targetPort: 8888
+    protocol: TCP
   {{- range $portname, $portnumber := $.Values.service.ports }}
   - name: {{ printf "http-%s" $portname }}
     port: {{ $portnumber }}
