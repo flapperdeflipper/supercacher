@@ -64,43 +64,8 @@ spec:
           containerPort: {{ $portnumber }}
           protocol: TCP
         {{- end }}
-        {{- if default true $.Values.livenessProbe.enabled }}
-        livenessProbe:
-          initialDelaySeconds: {{ default 5 $.Values.livenessProbe.initialDelaySeconds }}
-          periodSeconds: {{ default 5 $.Values.livenessProbe.periodSeconds }}
-          timeoutSeconds: {{ default 5 $.Values.livenessProbe.timeoutSeconds }}
-          httpGet:
-            path: /healthz/liveness
-            port: http
-            httpHeaders:
-              - name: host
-                value: healthz
-          successThreshold: {{ default 1 $.Values.livenessProbe.successThreshold }}
-          failureThreshold: {{ default 5 $.Values.livenessProbe.failureThreshold }}
-        {{- end }}
-        {{- if default true $.Values.readinessProbe.enabled }}
-        readinessProbe:
-          initialDelaySeconds: {{ default 5 $.Values.readinessProbe.initialDelaySeconds }}
-          periodSeconds: {{ default 30 $.Values.readinessProbe.periodSeconds }}
-          timeoutSeconds: {{ default 5 $.Values.readinessProbe.timeoutSeconds }}
-          httpGet:
-            path: /healthz/readiness
-            port: http
-            httpHeaders:
-              - name: host
-                value: healthz
-          successThreshold: {{ default 1 $.Values.readinessProbe.successThreshold }}
-          failureThreshold: {{ default 5 $.Values.readinessProbe.failureThreshold }}
-        {{- end }}
-        {{- if default true $.Values.startupProbe.enabled }}
-        startupProbe:
-          initialDelaySeconds: {{ default 10 $.Values.startupProbe.initialDelaySeconds }}
-          periodSeconds: {{ default 5 $.Values.startupProbe.periodSeconds }}
-          timeoutSeconds: {{ default 5 $.Values.startupProbe.timeoutSeconds }}
-          tcpSocket:
-            port: http-pypi
-          successThreshold: {{ default 1 $.Values.startupProbe.successThreshold }}
-          failureThreshold: {{ default 5 $.Values.startupProbe.failureThreshold }}
+        {{- with $.Values.healthProbes }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
         resources:
           {{- toYaml $.Values.resources | nindent 10 }}

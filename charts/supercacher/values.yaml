@@ -56,30 +56,39 @@ serviceAccount:
   name: ""
   rules: []
 
-## Probes
-livenessProbe:
-  enabled: true
-  initialDelaySeconds: 3
-  timeoutSeconds: 2
-  periodSeconds: 5
-  successThreshold: 1
-  failureThreshold: 2
-
-readinessProbe:
-  enabled: true
-  initialDelaySeconds: 2
-  timeoutSeconds: 2
-  periodSeconds: 5
-  successThreshold: 1
-  failureThreshold: 2
-
-startupProbe:
-  enabled: true
-  initialDelaySeconds: 2
-  periodSeconds: 1
-  timeoutSeconds: 2
-  successThreshold: 1
-  failureThreshold: 2
+healthProbes:
+  livenessProbe:
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    timeoutSeconds: 2
+    httpGet:
+      path: /healthz/liveness
+      port: http
+      httpHeaders:
+        - name: host
+          value: healthz
+    successThreshold: 1
+    failureThreshold: 2
+  readinessProbe:
+    initialDelaySeconds: 2
+    periodSeconds: 5
+    timeoutSeconds: 2
+    httpGet:
+      path: /healthz/readiness
+      port: http
+      httpHeaders:
+        - name: host
+          value: healthz
+    successThreshold: 1
+    failureThreshold: 2
+  startupProbe:
+    initialDelaySeconds: 2
+    periodSeconds: 1
+    timeoutSeconds: 2
+    tcpSocket:
+      port: http-pypi
+    successThreshold: 1
+    failureThreshold: 2
 
 ## Set resource definitions
 resources:
